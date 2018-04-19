@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import pentair
+import sms
 import datetime
 
 import json
@@ -32,6 +33,7 @@ class backgroundWorker (threading.Thread):
     def __init__(self):
          threading.Thread.__init__(self)
     def run(self):
+        sentMessage = False
         while True:
             for sensor_name,sensor in config['sensors'].iteritems():
 
@@ -71,6 +73,14 @@ class backgroundWorker (threading.Thread):
                     on = False
                 else:
                     on = True
+
+                if 'value' in config['sensors']['PoolTemperature']:
+                    if config['sensors']['PoolTemperature']['deg_F'] > 82 and not sentMessage:
+                        print "Pool is warm; sending SMS."
+                        sms.sendMessage("Pool is warm enough to swim =)")
+                        sentMessage = True
+                    elif config['sensors']['PoolTemperature']['deg_F'] < 80 and sentMessage:
+                        sentMessage = False
 
                 if 'value' in config['sensors']['RoofTemperature'] and 'value' in config['sensors']['PoolTemperature'] and 'value' in config['sensors']['HeatedTemperature']:
                     csv=open('./temp.csv', 'a')
