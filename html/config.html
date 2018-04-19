@@ -1,0 +1,413 @@
+% include('html/header.tpl', title='Configuration')
+<div data-role="collapsibleset">
+   <div data-role="collapsible">
+      <h3>Relay Modules</h3>
+      % if 'relay_modules' in config:
+      % for module_name,module in config['relay_modules'].iteritems():
+      <a href="#popupModule{{module_name}}" data-rel="popup" data-position-to="window" class="ui-btn ui-btn-inline">{{module_name}}</a>
+      <div data-role="popup" id="popupModule{{module_name}}">
+	 <form>
+	    <div style="padding:10px 20px;">
+	       <h3 class="ui-bar ui-bar-a">{{module_name}} Relay Module</h3>
+	       <div class="ui-body">
+		  <div class="ui-corner-all custom-corners">
+		     <div class="ui-bar ui-bar-a">
+			<h3>Control</h3>
+		     </div>
+		     <div class="ui-body ui-body-a">
+			% for relay_name,relay in sorted(module['relays'].iteritems()):
+			<script>
+$(document).ready(function() {
+   $("#module_{{module_name}}_relay_{{relay_name}}").change(function() {
+      var isChecked = $("#module_{{module_name}}_relay_{{relay_name}}").is(":checked") ? 1:0; 
+      $.ajax({
+	 url: '/action',
+	 type: 'POST',
+	 data: { type:'relay_modules', name:'{{module_name}}', relay:'{{relay_name}}', state:isChecked }
+      });
+   });
+});
+			</script>
+			<label for="module_{{module_name}}_relay_{{relay_name}}">
+			   Relay {{relay_name}} [GPIO_{{relay['gpio']}}]
+
+			   % if 'pumps' in config:
+			   % for pump_name,pump in config['pumps'].iteritems():
+			   % if pump['module'] == module_name and pump['relay'] == int(relay_name):
+			   ({{pump_name}} Pump)
+			   % end
+			   % end
+			   % end
+
+			   % if 'heaters' in config:
+			   % for heater_name,heater in config['heaters'].iteritems():
+			   % if heater['module'] == module_name and heater['relay'] == int(relay_name):
+			   ({{heater_name}} Heater)
+			   % end
+			   % end
+			   % end
+
+			   % if 'accessories' in config:
+			   % for accessory_name,accessory in config['accessories'].iteritems():
+			   % if accessory['module'] == module_name and accessory['relay'] == int(relay_name):
+			   ({{accessory_name}})
+			   % end
+			   % end
+			   % end
+			</label>
+			% if 'state' in relay and relay['state']:
+			<input type="checkbox" data-role="flipswitch" name="switch" id="module_{{module_name}}_relay_{{relay_name}}" checked="checked">
+			% else:
+			<input type="checkbox" data-role="flipswitch" name="switch" id="module_{{module_name}}_relay_{{relay_name}}">
+			% end
+			% end
+		     </div>
+		  </div>
+	       </div>
+	    </div>
+	 </form>
+      </div>
+      % end
+      % end
+   </div>
+   <div data-role="collapsible">
+      <h3>A/D Converters</h3>
+      % if 'converters' in config:
+      % for converter_name,converter in config['converters'].iteritems():
+      <a href="#popupConverter{{converter_name}}" data-rel="popup" data-position-to="window" class="ui-btn ui-btn-inline">{{converter_name}}</a>
+      <div data-role="popup" id="popupConverter{{converter_name}}">
+	 <form>
+	    <div style="padding:10px 20px;">
+	       <h3 class="ui-bar ui-bar-a">{{converter_name}}</h3>
+	       <div class="ui-body">
+		  <div class="ui-corner-all custom-corners">
+		     <div class="ui-bar ui-bar-a">
+			<h3>Converter Type</h3>
+		     </div>
+		     <div class="ui-body ui-body-a">
+			<select name="converter{{converter_name}}type" id="converter{{converter_name}}type">
+			   % for part_name in parts['converters']:
+			   % if 'model' in converter and converter['model'] == part_name:
+			   <option value="{{part_name}}" selected>{{part_name}}</option>
+			   % else:
+			   <option value="{{part_name}}">{{part_name}}</option>
+			   % end
+			   % end
+			</select>
+		     </div>
+		     <br>
+		     <div class="ui-bar ui-bar-a">
+			<h3>ADC</h3>
+		     </div>
+		     <div class="ui-body ui-body-a">
+			<table> 
+			   % for adc_name,adc in sorted(parts['converters'][converter['model']]['adcs'].iteritems()):
+			   <tr>
+			      <td style="border-bottom: 1px solid silver; padding-right: 1em">{{adc_name}}</td>
+			      <td style="border-bottom: 1px solid silver">{{adc}}</td>
+			   </tr>
+			   % end
+			</table>
+		     </div>
+		     <br>
+
+		     <div class="ui-bar ui-bar-a">
+			<h3>DAC</h3>
+		     </div>
+		     <div class="ui-body ui-body-a">
+			<table> 
+			   % for dac_name,dac in sorted(parts['converters'][converter['model']]['dacs'].iteritems()):
+			   <tr>
+			      <td style="border-bottom: 1px solid silver; padding-right: 1em">{{dac_name}}</td>
+			      <td style="border-bottom: 1px solid silver">{{dac}}</td>
+			   </tr>
+			   % end
+			</table>
+		     </div>
+		  </div>
+	       </div>
+	    </div>
+	 </form>
+      </div>
+      % end
+      % end
+   </div>
+   <div data-role="collapsible">
+      <h3>Pumps</h3>
+      % if 'pumps' in config:
+      % for pump_name,pump in config['pumps'].iteritems():
+      <a href="#popupPump{{pump_name}}" data-rel="popup" data-position-to="window" class="ui-btn ui-btn-inline">{{pump_name}}</a>
+      <div data-role="popup" id="popupPump{{pump_name}}">
+	 <form>
+	    <div style="padding:10px 20px;">
+	       <h3 class="ui-bar ui-bar-a">{{pump_name}} Pump</h3>
+	       <div class="ui-body">
+		  <div class="ui-corner-all custom-corners">
+		     <div class="ui-bar ui-bar-a">
+			<h3>Control</h3>
+		     </div>
+		     <div class="ui-body ui-body-a">
+			<label for="pump{{pump_name}}module">Relay Module</label>
+			<select name="pump{{pump_name}}module" id="pump{{pump_name}}module">
+			   % for module_name in config['relay_modules']:
+			   % if 'module' in pump and pump['module'] == module_name:
+			   <option value="{{module_name}}" selected>{{module_name}}</option>
+			   % else:
+			   <option value="{{module_name}}">{{module_name}}</option>
+			   % end
+			   % end 
+			</select>
+
+			<label for="pump{{pump_name}}relay">Relay</label>
+			<select name="pump{{pump_name}}relay" id="pump{{pump_name}}relay">
+			   % for relay_name in sorted(config['relay_modules'][pump['module']]['relays']):
+			   % if 'relay' in pump and pump['relay'] == int(relay_name):
+			   <option value="{{relay_name}}" selected>{{relay_name}}</option>
+			   % else:
+			   <option value="{{relay_name}}">{{relay_name}}</option>
+			   % end
+			   % end 
+			</select>
+
+			<label for="pump{{pump_name}}control">Test</label>
+			<script>
+$(document).ready(function() {
+   $("#pump{{pump_name}}control").change(function() {
+      var isChecked = $("#pump{{pump_name}}control").is(":checked") ? 1:0; 
+      $.ajax({
+	 url: '/action',
+	 type: 'POST',
+	 data: { type:'pumps', name:'{{pump_name}}', state:isChecked }
+      });
+   });
+});
+			</script>
+			% if 'state' in pump and pump['state']:
+			<input type="checkbox" data-role="flipswitch" name="switch" id="pump{{pump_name}}control" checked="checked">
+			% else:
+			<input type="checkbox" data-role="flipswitch" name="switch" id="pump{{pump_name}}control">
+			% end
+
+		     </div>
+		  </div>
+		  <br>
+		  % if 'gpio' in pump:
+		  <div class="ui-corner-all custom-corners">
+		     <div class="ui-bar ui-bar-a">
+			<h3>GPIO</h3>
+		     </div>
+		     <div class="ui-body ui-body-a">
+			<input name="pump{{pump_name}}gpio" id="pump{{pump_name}}gpio" pattern="[0-9]*" type="number" value="{{pump['gpio']}}">
+		     </div>
+		  </div>
+		  % end
+		  <br>
+		  % if 'speeds' in pump:
+		  <div class="ui-corner-all custom-corners">
+		     <div class="ui-bar ui-bar-a">
+			<h3>Speeds</h3>
+		     </div>
+		     <div class="ui-body ui-body-a">
+			% for speed_name,speed in sorted(pump['speeds'].iteritems()):
+			<label for="pump{{pump_name}}speed{{speed_name}}"> {{speed_name}}</label>
+			% if 'rpm' in speed:
+			<input name="pump{{pump_name}}speed{{speed_name}}" id="pump{{pump_name}}speed{{speed_name}}" pattern="[0-9]*" type="number" value="{{speed['rpm']}}"> 
+			% else:
+			<input name="pump{{pump_name}}speed{{speed_name}}" id="pump{{pump_name}}speed{{speed_name}}" pattern="[0-9]*" type="number"> 
+			% end
+			% end
+		     </div>
+		  </div>
+		  % end
+		  <button type="submit" class="ui-btn ui-corner-all ui-shadow ui-btn-icon-left ui-icon-check" disabled>Save</button>
+	       </div>
+	    </div>
+	 </form>
+      </div>
+      % end
+      % end
+   </div>
+   <div data-role="collapsible">
+      <h3>Heaters</h3>
+      % if 'heaters' in config:
+      % for heater_name,heater in config['heaters'].iteritems():
+      <a href="#popupHeater{{heater_name}}" data-rel="popup" data-position-to="window" class="ui-btn ui-btn-inline">{{heater_name}}</a>
+      <div data-role="popup" id="popupHeater{{heater_name}}">
+	 <form>
+	    <div style="padding:10px 20px;">
+	       <h3 class="ui-bar ui-bar-a">{{heater_name}} Heater</h3>
+	       <div class="ui-body">
+		  <div class="ui-corner-all custom-corners">
+		     <div class="ui-bar ui-bar-a">
+			<h3>Control</h3>
+		     </div>
+		     <div class="ui-body ui-body-a">
+
+			<label for="heater{{heater_name}}module">Relay Module</label>
+			<select name="heater{{heater_name}}module" id="heater{{heater_name}}module">
+			   % for module_name in config['relay_modules']:
+			   % if 'module' in heater and heater['module'] == module_name:
+			   <option value="{{module_name}}" selected>{{module_name}}</option>
+			   % else:
+			   <option value="{{module_name}}">{{module_name}}</option>
+			   % end
+			   % end
+			</select>
+
+			<label for="heater{{heater_name}}relay">Relay</label>
+			<select name="heater{{heater_name}}relay" id="heater{{heater_name}}relay">
+			   % for relay_name in sorted(config['relay_modules'][heater['module']]['relays']):
+			   % if 'relay' in heater and heater['relay'] == int(relay_name):
+			   <option value="{{relay_name}}" selected>{{relay_name}}</option>
+			   % else:
+			   <option value="{{relay_name}}">{{relay_name}}</option>
+			   % end
+			   % end
+			</select>
+
+			<label for="heater{{heater_name}}control">Test</label>
+
+			<script>
+$(document).ready(function() {
+   $("#heater{{heater_name}}control").change(function() {
+      var isChecked = $("#heater{{heater_name}}control").is(":checked") ? 1:0; 
+      $.ajax({
+	 url: '/action',
+	 type: 'POST',
+	 data: { type:'heaters', name:'{{heater_name}}', state:isChecked }
+      });
+   });
+});
+			</script>
+			% if 'state' in heater and heater['state']:
+			<input type="checkbox" data-role="flipswitch" name="switch" id="heater{{heater_name}}control" checked="checked">
+			% else:
+			<input type="checkbox" data-role="flipswitch" name="switch" id="heater{{heater_name}}control">
+			% end
+		     </div>
+		  </div>
+	       </div>
+	    </div>
+	 </form>
+      </div>
+      % end 
+      % end
+   </div>
+   <div data-role="collapsible">
+      <h3>Sensors</h3>
+      % if 'sensors' in config:
+      % for sensor_name,sensor in config['sensors'].iteritems():
+      <a href="#popupSensor{{sensor_name}}" data-rel="popup" data-position-to="window" class="ui-btn ui-btn-inline">{{sensor_name}}</a>
+      <div data-role="popup" id="popupSensor{{sensor_name}}"> 
+	 <div style="padding:10px 20px;">
+	    <h3 class="ui-bar ui-bar-a">{{sensor_name}} Sensor</h3>
+	    <div class="ui-body">
+	       <div class="ui-corner-all custom-corners">
+
+
+		  <div class="ui-bar ui-bar-a">
+		     <h3>Converter</h3>
+		  </div>
+		  <div class="ui-body ui-body-a">
+
+		     <select name="sensor{{sensor_name}}converter" id="sensor{{sensor_name}}converter">
+			% for converter_name in config['converters']:
+			% if 'converter' in sensor and sensor['converter'] == converter_name:
+			<option value="{{converter_name}}" selected>{{converter_name}}</option>
+			% else:
+			<option value="{{converter_name}}">{{converter_name}}</option>
+			% end
+			% end
+		     </select>
+
+		     <select name="sensor{{sensor_name}}input" id="sensor{{sensor_name}}input">
+			% for adc in sorted(parts['converters'][config['converters'][converter_name]['model']]['adcs']):
+			% if 'adc' in sensor and sensor['adc'] == adc:
+			<option value="{{adc}}" selected>{{adc}}</option>
+			% else:
+			<option value="{{adc}}">{{adc}}</option>
+			% end
+			% end
+		     </select>
+		  </div>
+		  <br>
+		  <div class="ui-bar ui-bar-a">
+		     <h3>Current Value</h3>
+		  </div>
+		  <div class="ui-body ui-body-a">
+		     <iframe src="/popup/sensors/{{sensor_name}}" seamless="seamless" frameBorder="0"></iframe>
+		  </div>
+	       </div>
+	    </div>
+	 </div>
+      </div>
+      % end
+      % end
+   </div>
+   <div data-role="collapsible">
+      <h3>Accessories</h3>
+      % if 'accessories' in config:
+      % for accessory_name,accessory in config['accessories'].iteritems():
+      <a href="#popupAccessory{{accessory_name}}" data-rel="popup" data-position-to="window" class="ui-btn ui-btn-inline">{{accessory_name}}</a>
+      <div data-role="popup" id="popupAccessory{{accessory_name}}">
+	 <form>
+	    <div style="padding:10px 20px;">
+	       <h3 class="ui-bar ui-bar-a">{{accessory_name}}</h3>
+	       <div class="ui-body">
+		  <div class="ui-corner-all custom-corners">
+		     <div class="ui-bar ui-bar-a">
+			<h3>Control</h3>
+		     </div>
+		     <div class="ui-body ui-body-a">
+
+			<label for="accessory{{accessory_name}}module">Relay Module</label>
+			<select name="accessory{{accessory_name}}module" id="accessory{{accessory_name}}module">
+			   % for module_name in config['relay_modules']:
+			   % if 'module' in accessory and accessory['module'] == module_name:
+			   <option value="{{module_name}}" selected>{{module_name}}</option>
+			   % else:
+			   <option value="{{module_name}}">{{module_name}}</option>
+			   % end
+			   % end
+			</select>
+
+			<label for="accessory{{accessory_name}}relay">Relay</label>
+			<select name="accessory{{accessory_name}}relay" id="accessory{{accessory_name}}relay">
+			   % for relay_name in sorted(config['relay_modules'][accessory['module']]['relays']):
+			   % if 'relay' in accessory and accessory['relay'] == int(relay_name):
+			   <option value="{{relay_name}}" selected>{{relay_name}}</option>
+			   % else:
+			   <option value="{{relay_name}}">{{relay_name}}</option>
+			   % end
+			   % end
+			</select>
+
+			<label for="accessory{{accessory_name}}control">Test</label>
+			<script>
+$(document).ready(function() {
+   $("#accessory{{accessory_name}}control").change(function() {
+      var isChecked = $("#accessory{{accessory_name}}control").is(":checked") ? 1:0; 
+      $.ajax({
+	 url: '/action',
+	 type: 'POST',
+	 data: { type:'accessories', name:'{{accessory_name}}', state:isChecked }
+      });
+   });
+});
+			</script>
+			% if 'state' in accessory and accessory['state']:
+			<input type="checkbox" data-role="flipswitch" name="switch" id="accessory{{accessory_name}}control" checked="checked">
+			% else:
+			<input type="checkbox" data-role="flipswitch" name="switch" id="accessory{{accessory_name}}control">
+			% end
+		     </div>
+		  </div>
+	       </div>
+	    </div>
+	 </form>
+      </div>
+      % end
+      % end
+   </div>
+</div>
+% include('html/footer.tpl')

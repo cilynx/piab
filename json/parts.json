@@ -1,0 +1,44 @@
+{
+   "relay_modules": {
+      "JBtek 8 Channel DC 5V Relay Module": {
+	 "link": "http://amzn.to/2kyXkLI",
+	 "relays": 8,
+	 "active_low": true
+      }
+   },
+   "pumps": {
+      "IntelliFlo VS+SVRS": {
+	 "link": "http://amzn.to/2jMTPSN"
+      }
+   },
+   "sensors": {
+      "Pentair 520272": {
+	 "link": "http://amzn.to/2lcgUKI",
+	 "nominal_R": 10000,
+	 "nominal_C": 25
+      },
+      "Hayward GLX-PC-12": {
+	 "link": "http://amzn.to/2kCHPTh",
+	 "nominal_R": 10000,
+	 "nominal_C": 25
+      }
+   },
+   "converters": {
+      "PCF8591 Demo Board": {
+	 "link": "http://amzn.to/2kAHCAf",
+	 "comm": "i2c",
+	 "adcs": {
+	    "Photoresistor": "0x00",
+	    "Thermistor": "0x01",
+	    "Trimpot": "0x03",
+	    "ain0": "0x00",
+	    "ain1": "0x01",
+	    "ain2": "0x02",
+	    "ain3": "0x03"
+	 },
+	 "dacs": {
+	    "aout": "0x40"
+	 }
+      }
+   }
+}
