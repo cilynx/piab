@@ -1,11 +1,11 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 import binascii
 
 PACKET_HEADER = [0xff, 0x00, 0xff, 0xa5]
 
 VERSION = 0x00
 
-ADDRESSES = { 
+ADDRESSES = {
         0x10: 'SUNTOUCH',
         0x21: 'REMOTE_CONTROLLER',
         0x48: 'QUICKTOUCH',
@@ -35,7 +35,7 @@ COMMANDS = {
 COMMAND_BLOCKS_CONSOLE = {
         COMMANDS['PUMP_MODE']: True,
         COMMANDS['PUMP_POWER']: True,
-        COMMANDS['PUMP_STATUS']: False 
+        COMMANDS['PUMP_STATUS']: False
         }
 
 PACKET_FIELDS = {
@@ -47,7 +47,7 @@ PACKET_FIELDS = {
         }
 
 PUMP_STATUS_FIELDS = {
-        'RUN': 0, 
+        'RUN': 0,
         'MODE': 1,
         'DRIVE_STATE': 2,
         'WATTS_H': 3,
@@ -57,7 +57,7 @@ PUMP_STATUS_FIELDS = {
         'GPM': 7,
         'PPC': 8,
         'UNKNOWN': 9,
-        'ERROR': 10, 
+        'ERROR': 10,
         'REMAINING_TIME_H': 11,
         'REMAINING_TIME_M': 12,
         'CLOCK_TIME_H': 13,
@@ -114,7 +114,7 @@ def setPumpPower(state):
     sendPump(COMMANDS['PUMP_POWER'], [PUMP_POWER[state]])
 
 def setPumpRPM(rpm):
-    print "Setting pump RPM to", rpm
+    print("Setting pump RPM to", rpm)
     data = PUMP_MODES['SET_RPM'][:]
     data.extend([int(rpm / 256), int(rpm % 256)])
     response = sendPump(COMMANDS['PUMP_MODE'], data)
@@ -126,7 +126,7 @@ def setPumpRPM(rpm):
         if attempt == 3:
 # TODO: Fix this stupid workaround -- need to figure out why we're not always getting the response we expect
             return rpm
-        attempt += 1 
+        attempt += 1
     print("Success", binascii.hexlify(response))
     return rpm
 
@@ -183,15 +183,15 @@ def getResponsePacket():
                 print("Got a Pentair packet header")
 
 #                packet.extend(RS485.read(4)) # Version, DST, SRC, Command
-		version = RS485.read()
-		print("Version:", binascii.hexlify(version))
-		dst = RS485.read()
-		print("DST:", binascii.hexlify(dst))
-		src = RS485.read()
-		print("SRC:", binascii.hexlify(src))
-		command = RS485.read()
-		print("Command:", binascii.hexlify(command))
-		packet.extend([version, dst, src, command])		
+                version = RS485.read()
+                print("Version:", binascii.hexlify(version))
+                dst = RS485.read()
+                print("DST:", binascii.hexlify(dst))
+                src = RS485.read()
+                print("SRC:", binascii.hexlify(src))
+                command = RS485.read()
+                print("Command:", binascii.hexlify(command))
+                packet.extend([version, dst, src, command])
 
 
                 data_length = RS485.read()
@@ -210,7 +210,7 @@ def getResponsePacket():
                 read_check_l = RS485.read()
 
                 if ord(read_check_h) == calc_check_h and ord(read_check_l) == calc_check_l:
-                    print "Valid checksum"
+                    print("Valid checksum")
                     packet.extend([read_check_h, read_check_l])
                     #import binascii
                     #print binascii.hexlify(bytearray(packet))
@@ -242,5 +242,3 @@ def buildPacket(dst, command, data=None):
     print("buildPacket:", binascii.hexlify(packet))
 
     return packet
-
-

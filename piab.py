@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 
 import pentair
 #import sms
@@ -49,9 +49,9 @@ class backgroundWorker (threading.Thread):
                 count = 10 # TODO: This might be better as a config setting
                 for _ in range(count):
                     total += bus.read_byte_data(int(addr,16), int(cmd,16))
-                                                                
+
                 sensor['value'] = total / count
-                                                                    
+
                 x0 = sensor['points'][0][0]
                 y0 = sensor['points'][0][1]
                 x1 = sensor['points'][1][0]
@@ -149,11 +149,11 @@ def popup(type, name):
     cmd = board['adcs'][sensor['adc']]
 
     # Throw away the first reading as it's old...on the PCF8591 anyway
-    bus.read_byte_data(int(addr,16), int(cmd,16)) 
+    bus.read_byte_data(int(addr,16), int(cmd,16))
 
     total = 0
     count = 100 # TODO: This might be better as a config setting
-    for _ in range(count): 
+    for _ in range(count):
         total += bus.read_byte_data(int(addr,16), int(cmd,16))
 
     sensor['value'] = total / count
@@ -178,7 +178,7 @@ def action():
 
     item = config[item_type][item_name]
     item['state'] = bool(int(request.forms.get('state')))
-    
+
     if 'protocol' in item and 'port' in item: # Item in an abstraction (Pump, Heater, Accessory) connected to a Serial Port
         None
     else:
@@ -189,7 +189,7 @@ def action():
         else: # Item is a Relay Module
             module = item
             relay = module['relays'][request.forms.get('relay')]
-        
+
         relay['state'] = item['state']
 
         pin = GPIO_PIN[relay['gpio']]
@@ -204,5 +204,5 @@ def action():
             GPIO.output(pin, on)
         else:
             GPIO.output(pin, not on)
-        
+
 run(host='0.0.0.0', port=80, debug=True, reloader=False)
