@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import pentair
-import sms
+#import sms
 import datetime
 
 import json
@@ -76,8 +76,8 @@ class backgroundWorker (threading.Thread):
 
                 if 'value' in config['sensors']['PoolTemperature']:
                     if config['sensors']['PoolTemperature']['deg_F'] > 82 and not sentMessage:
-                        print "Pool is warm; sending SMS."
-                        sms.sendMessage("Pool is warm enough to swim =)")
+                        print("Pool is warm; sending SMS.")
+#                        sms.sendMessage("Pool is warm enough to swim =)")
                         sentMessage = True
                     elif config['sensors']['PoolTemperature']['deg_F'] < 80 and sentMessage:
                         sentMessage = False
