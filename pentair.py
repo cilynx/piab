@@ -1,4 +1,5 @@
 #!/usr/bin/env python2
+import binascii
 
 PACKET_HEADER = [0xff, 0x00, 0xff, 0xa5]
 
@@ -116,12 +117,18 @@ def setPumpRPM(rpm):
     print "Setting pump RPM to", rpm
     data = PUMP_MODES['SET_RPM'][:]
     data.extend([int(rpm / 256), int(rpm % 256)])
-    sendPump(COMMANDS['PUMP_MODE'], data)
-    response = getResponsePacket()
-    if data[2] == response[9] and data[3] == response[10]:
-        return rpm
-    else:
-        return False
+    response = sendPump(COMMANDS['PUMP_MODE'], data)
+#    if data[2] == response[9] and data[3] == response[10]:
+    attempt = 0
+    while data[2] != response[9] or data[3] != response[10]:
+        print("Failure", binascii.hexlify(response))
+        response = sendPump(COMMANDS['PUMP_MODE'], data)
+        if attempt == 3:
+# TODO: Fix this stupid workaround -- need to figure out why we're not always getting the response we expect
+            return rpm
+        attempt += 1 
+    print("Success", binascii.hexlify(response))
+    return rpm
 
 def setPumpProgram(program):
     sendPump(COMMANDS['PUMP_MODE'], PUMP_PROGRAMS[program])
@@ -137,10 +144,13 @@ def sendPump(command, data=None):
     dst = ADDRESSES['INTELLIFLO_PUMP_0']
 
     RS485.write(buildPacket(dst, command, data))
+    response = getResponsePacket()
 
     if(COMMAND_BLOCKS_CONSOLE[command]):
         time.sleep(1)
         setPumpRemoteControl(False)
+
+    return response
 
 def setPumpRemoteControl(state):
     RS485.write(buildPacket(ADDRESSES['INTELLIFLO_PUMP_0'], COMMANDS['REMOTE_CONTROL'], [REMOTE_CONTROL_MODES[state]]))
@@ -160,15 +170,30 @@ def getPumpStatus():
         return False
 
 def getResponsePacket():
+    import binascii
     packet = []
     while True:
         for c in RS485.read():
             packet.append(ord(c))
+#        for c in RS485.parseInt():
+#            packet.append(c)
             if len(packet) > 4:
                 packet.pop(0)
             if packet == PACKET_HEADER:
-                #print "Got a Pentair packet header"
-                packet.extend(RS485.read(4)) # Version, DST, SRC, Command
+                print("Got a Pentair packet header")
+
+#                packet.extend(RS485.read(4)) # Version, DST, SRC, Command
+		version = RS485.read()
+		print("Version:", binascii.hexlify(version))
+		dst = RS485.read()
+		print("DST:", binascii.hexlify(dst))
+		src = RS485.read()
+		print("SRC:", binascii.hexlify(src))
+		command = RS485.read()
+		print("Command:", binascii.hexlify(command))
+		packet.extend([version, dst, src, command])		
+
+
                 data_length = RS485.read()
                 packet.append(data_length)
 
@@ -185,7 +210,7 @@ def getResponsePacket():
                 read_check_l = RS485.read()
 
                 if ord(read_check_h) == calc_check_h and ord(read_check_l) == calc_check_l:
-                    #print "Valid checksum"
+                    print "Valid checksum"
                     packet.extend([read_check_h, read_check_l])
                     #import binascii
                     #print binascii.hexlify(bytearray(packet))
