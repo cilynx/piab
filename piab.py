@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 import pentair
 #import sms
@@ -61,7 +61,7 @@ class backgroundWorker (threading.Thread):
                 b = y0-(m*x0)
 
                 sensor['deg_F'] = m*sensor['value'] + b
-                print sensor_name + " " + str(int(sensor['deg_F'])) + " F (" + str(int(sensor['value'])) + ")"
+                print(sensor_name + " " + str(int(sensor['deg_F'])) + " F (" + str(int(sensor['value'])) + ")")
 
                 item = config['heaters']['Solar']
                 module = config['relay_modules'][item['module']]
@@ -92,18 +92,18 @@ class backgroundWorker (threading.Thread):
                         if 'state' in config['heaters']['Solar'] and config['heaters']['Solar']['state'] == True:
                             print "Solar Heater is on.  Good."
                         else:
-                            print "Turning Solar Heater on."
                             config['heaters']['Solar']['state'] = True
                     elif config['sensors']['HeatedTemperature']['deg_F'] - config['sensors']['PoolTemperature']['deg_F'] <= 0:
+                            print("Waiting to come up to speed")
                         GPIO.output(pin, not on)
                         if 'state' in config['heaters']['Solar'] and config['heaters']['Solar']['state'] == True:
-                            print "Turning Solar Heater off."
+                            print("Turning Solar Heater off.")
                             config['heaters']['Solar']['state'] = False
                             pentair.setPumpRPM(0)
                         else:
-                            print "Solar Heater is off.  Good."
+                            print("Solar Heater is off.  Good.")
                     else:
-                        print "Avoiding Bounce."
+                        print("Avoiding Bounce.")
                         if 'state' in config['heaters']['Solar'] and config['heaters']['Solar']['state'] == True:
                             pentair.setPumpRPM(2000)
 

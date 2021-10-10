@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 PACKET_HEADER = [0xff, 0x00, 0xff, 0xa5]
 
@@ -109,7 +109,7 @@ RS485 = serial.Serial(
         )
 
 def setPumpPower(state):
-    print "Turning Pump", state
+    print("Turning Pump", state)
     sendPump(COMMANDS['PUMP_POWER'], [PUMP_POWER[state]])
 
 def setPumpRPM(rpm):
@@ -124,7 +124,7 @@ def setPumpRPM(rpm):
         return False
 
 def setPumpProgram(program):
-    sendPump(COMMANDS['PUMP_MODE'], PUMP_PROGRAMS[program]);
+    sendPump(COMMANDS['PUMP_MODE'], PUMP_PROGRAMS[program])
 
 def sendPump(command, data=None):
     import time
@@ -214,7 +214,7 @@ def buildPacket(dst, command, data=None):
     packet.extend(buildPayload(dst, command, data))
 
     import binascii
-    print binascii.hexlify(packet)
+    print("buildPacket:", binascii.hexlify(packet))
 
     return packet
 
