@@ -1,5 +1,13 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import binascii
+import time
+
+RED    = '\033[31m'
+ORANGE = '\033[91m'
+YELLOW = '\033[93m'
+GREEN  = '\033[92m'
+CYAN   = '\033[36m'
+ENDC   = '\033[0m'
 
 PACKET_HEADER = [0xff, 0x00, 0xff, 0xa5]
 
@@ -118,28 +126,24 @@ def setPumpRPM(rpm):
     data = PUMP_MODES['SET_RPM'][:]
     data.extend([int(rpm / 256), int(rpm % 256)])
     response = sendPump(COMMANDS['PUMP_MODE'], data)
-#    if data[2] == response[9] and data[3] == response[10]:
-    attempt = 0
-    while data[2] != response[9] or data[3] != response[10]:
-        print("Failure", binascii.hexlify(response))
-        response = sendPump(COMMANDS['PUMP_MODE'], data)
-        if attempt == 3:
-# TODO: Fix this stupid workaround -- need to figure out why we're not always getting the response we expect
-            return rpm
-        attempt += 1
-    print("Success", binascii.hexlify(response))
+    status = None
+    actual_rpm = None
+    while actual_rpm != rpm:
+        while not status:
+            status = getPumpStatus()
+        actual_rpm = status[2]
+        status = None
+        print("RPM:",actual_rpm)
     return rpm
 
 def setPumpProgram(program):
     sendPump(COMMANDS['PUMP_MODE'], PUMP_PROGRAMS[program])
 
 def sendPump(command, data=None):
-    import time
-    time.sleep(1)
+    print(f"{CYAN}sendPump({command}, {data}){ENDC}")
 
     if(COMMAND_BLOCKS_CONSOLE[command]):
         setPumpRemoteControl(True)
-        time.sleep(1)
 
     dst = ADDRESSES['INTELLIFLO_PUMP_0']
 
@@ -147,17 +151,19 @@ def sendPump(command, data=None):
     response = getResponsePacket()
 
     if(COMMAND_BLOCKS_CONSOLE[command]):
-        time.sleep(1)
         setPumpRemoteControl(False)
 
     return response
 
 def setPumpRemoteControl(state):
+    return
+    print(f"{CYAN}setPumpRemoteControl(){ENDC}")
     RS485.write(buildPacket(ADDRESSES['INTELLIFLO_PUMP_0'], COMMANDS['REMOTE_CONTROL'], [REMOTE_CONTROL_MODES[state]]))
+    return getResponsePacket()
 
 def getPumpStatus():
-    sendPump(COMMANDS['PUMP_STATUS'])
-    response = getResponsePacket()
+    print(f"{CYAN}getPumpStatus(){ENDC}")
+    response = sendPump(COMMANDS['PUMP_STATUS'])
     if response[PACKET_FIELDS['COMMAND']] == COMMANDS['PUMP_STATUS']:
         data = response[9:]
         mode = data[PUMP_STATUS_FIELDS['MODE']]
@@ -166,58 +172,45 @@ def getPumpStatus():
         hour_r, minute_r = data[PUMP_STATUS_FIELDS['REMAINING_TIME_H']], data[PUMP_STATUS_FIELDS['REMAINING_TIME_M']]
         hour_c, minute_c = data[PUMP_STATUS_FIELDS['CLOCK_TIME_H']], data[PUMP_STATUS_FIELDS['CLOCK_TIME_M']]
         return mode, watts, rpm, hour_r, minute_r, hour_c, minute_c
-    else:
-        return False
 
 def getResponsePacket():
-    import binascii
+    print(f"{CYAN}getResponsePacket(){ENDC}")
     packet = []
     while True:
-        for c in RS485.read():
-            packet.append(ord(c))
-#        for c in RS485.parseInt():
-#            packet.append(c)
-            if len(packet) > 4:
-                packet.pop(0)
-            if packet == PACKET_HEADER:
-                print("Got a Pentair packet header")
+        c = int.from_bytes(RS485.read(), 'big')
+        packet.append(c)
 
-#                packet.extend(RS485.read(4)) # Version, DST, SRC, Command
-                version = RS485.read()
-                print("Version:", binascii.hexlify(version))
-                dst = RS485.read()
-                print("DST:", binascii.hexlify(dst))
-                src = RS485.read()
-                print("SRC:", binascii.hexlify(src))
-                command = RS485.read()
-                print("Command:", binascii.hexlify(command))
-                packet.extend([version, dst, src, command])
+        if len(packet) > 4:
+            packet.pop(0)
+        if packet == PACKET_HEADER:
+            packet.extend(RS485.read(4)) # Version, DST, SRC, Command
 
-
-                data_length = RS485.read()
+            data_length = int.from_bytes(RS485.read(), 'big')
+            if data_length > 0:
+                data = RS485.read(data_length)
                 packet.append(data_length)
+                packet.extend(data)
 
-                if ord(data_length) > 0:
-                    data = RS485.read(ord(data_length))
-                    packet.extend(data)
+            print(f"{GREEN}{packet}{ENDC}")
+            print(f"{ORANGE}Version: {packet[4]}{ENDC}")
+            print(f"{ORANGE}DST: {packet[5]}{ENDC}")
+            print(f"{ORANGE}SRC: {packet[6]}{ENDC}")
+            print(f"{ORANGE}Command: {COMMANDS[packet[7]]}{ENDC}")
+            print(f"{ORANGE}Data Length: {packet[8]}{ENDC}")
+            print(f"{ORANGE}Data: {packet[9:]}{ENDC}")
+            payload = packet[3:]
 
-                payload = bytearray(packet[3:])
+            calc_check_h = int(sum(payload) / 256)
+            calc_check_l = int(sum(payload) % 256)
 
-                calc_check_h = int(sum(payload) / 256)
-                calc_check_l = int(sum(payload) % 256)
+            read_check = list(RS485.read(2))
 
-                read_check_h = RS485.read()
-                read_check_l = RS485.read()
-
-                if ord(read_check_h) == calc_check_h and ord(read_check_l) == calc_check_l:
-                    print("Valid checksum")
-                    packet.extend([read_check_h, read_check_l])
-                    #import binascii
-                    #print binascii.hexlify(bytearray(packet))
-                    return bytearray(packet)
-                else:
-                    #print "Bad Checksum"
-                    return False
+            if read_check == [calc_check_h, calc_check_l]:
+                packet.extend(read_check)
+                return bytearray(packet)
+            else:
+                print(f"{RED}Bad Checksum. Calc: {[calc_check_h, calc_check_l]}, Read: {read_check}{ENDC}")
+                return None
 
 def buildPayload(dst, command, data=None):
     payload = bytearray([PACKET_HEADER[3], VERSION, dst, SRC, command])
@@ -238,7 +231,18 @@ def buildPacket(dst, command, data=None):
     packet = bytearray(PACKET_HEADER[0:3])
     packet.extend(buildPayload(dst, command, data))
 
-    import binascii
-    print("buildPacket:", binascii.hexlify(packet))
+    # import binascii
+    pack = list(packet)
+    print(f"{YELLOW}{list(pack)}")
+    print(f"{ORANGE}Version: {pack[4]}{ENDC}")
+    print(f"{ORANGE}DST: {pack[5]}{ENDC}")
+    print(f"{ORANGE}SRC: {pack[6]}{ENDC}")
+    print(f"{ORANGE}Command: {COMMANDS[pack[7]]}{ENDC}")
+    print(f"{ORANGE}Data Length: {pack[8]}{ENDC}")
+    print(f"{ORANGE}Data: {pack[9:-2]}{ENDC}")
+    if pack[7] == COMMANDS['PUMP_MODE']:
+        print(f"{ORANGE}Pump Mode: {PUMP_MODES[pack[9]]}{ENDC}")
+        if [pack[9],pack[10]] == PUMP_MODES['SET_RPM']:
+            print(f"{ORANGE}RPM: {pack[11]*256+pack[12]}{ENDC}")
 
     return packet

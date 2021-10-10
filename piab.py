@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import pentair
 #import sms
@@ -36,6 +36,7 @@ class backgroundWorker (threading.Thread):
         sentMessage = False
         while True:
             for sensor_name,sensor in config['sensors'].items():
+                time.sleep(1)
 
                 converter = config['converters'][sensor['converter']]
                 addr = converter['address']
@@ -87,19 +88,16 @@ class backgroundWorker (threading.Thread):
                     csv.write(datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S') + ", " + str(config['sensors']['RoofTemperature']['deg_F']) + ", " + str(config['sensors']['PoolTemperature']['deg_F']) + ", " + str(config['sensors']['HeatedTemperature']['deg_F']) + "\n")
                     csv.close()
                     if config['sensors']['RoofTemperature']['deg_F'] - config['sensors']['PoolTemperature']['deg_F'] > 10:
-                        if pentair.setPumpRPM(3000):
-                            GPIO.output(pin, on)
-                            if 'state' in config['heaters']['Solar'] and config['heaters']['Solar']['state'] == True:
-                                print("Solar Heater is on.  Good.")
-                            else:
-                                print("Turning Solar Heater on.")
-                                config['heaters']['Solar']['state'] = True
+                        pentair.setPumpRPM(3000)
+                        GPIO.output(pin, on)
+                        if 'state' in config['heaters']['Solar'] and config['heaters']['Solar']['state'] == True:
+                            print("Solar Heater is on.  Good.")
                         else:
-                            print("Waiting to come up to speed")
+                            print("Turning Solar Heater on.")
+                            config['heaters']['Solar']['state'] = True
                     elif config['sensors']['HeatedTemperature']['deg_F'] - config['sensors']['PoolTemperature']['deg_F'] < 1:
-#                    elif config['sensors']['RoofTemperature']['deg_F'] - config['sensors']['PoolTemperature']['deg_F'] <= 1:
                         GPIO.output(pin, not on)
-                        time.sleep(10)
+                        time.sleep(10) # Give valve time to close
                         pentair.setPumpRPM(1500)
                         if 'state' in config['heaters']['Solar'] and config['heaters']['Solar']['state'] == True:
                             print("Turning Solar Heater off.")
@@ -112,10 +110,6 @@ class backgroundWorker (threading.Thread):
                             pentair.setPumpRPM(3000)
                         else:
                             pentair.setPumpRPM(1500)
-
-                time.sleep(30)
-
-
 
 workerThread = backgroundWorker()
 workerThread.setDaemon(True)
@@ -179,7 +173,7 @@ def action():
     item = config[item_type][item_name]
     item['state'] = bool(int(request.forms.get('state')))
 
-    if 'protocol' in item and 'port' in item: # Item in an abstraction (Pump, Heater, Accessory) connected to a Serial Port
+    if 'protocol' in item and 'port' in item: # Item is an abstraction (Pump, Heater, Accessory) connected to a Serial Port
         None
     else:
         if 'module' in item and 'relay' in item: # Item is an abstraction (Pump, Heater, Accessory) connected to a Relay Module
@@ -205,4 +199,4 @@ def action():
         else:
             GPIO.output(pin, not on)
 
-run(host='0.0.0.0', port=80, debug=True, reloader=False)
+run(host='0.0.0.0', port=8000, debug=True, reloader=False)
