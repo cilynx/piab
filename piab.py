@@ -62,7 +62,7 @@ class backgroundWorker (threading.Thread):
                 b = y0-(m*x0)
 
                 sensor['deg_F'] = m*sensor['value'] + b
-                print(sensor_name + " " + str(int(sensor['deg_F'])) + " F (" + str(int(sensor['value'])) + ")")
+                print(f"{sensor_name} {str(int(sensor['deg_F']))}F ({str(int(sensor['value']))})")
 
                 item = config['heaters']['Solar']
                 module = config['relay_modules'][item['module']]
@@ -93,8 +93,11 @@ class backgroundWorker (threading.Thread):
                         if 'state' in config['heaters']['Solar'] and config['heaters']['Solar']['state'] == True:
                             print("Solar Heater is on.  Good.")
                         else:
-                            print("Turning Solar Heater on.")
+                            print("Turning Solar Heater on and waiting 60s for heated water flow.")
                             config['heaters']['Solar']['state'] = True
+                            time.sleep(30)
+                            pentair.setPumpRPM(3000)
+                            time.sleep(30)
                     elif config['sensors']['HeatedTemperature']['deg_F'] - config['sensors']['PoolTemperature']['deg_F'] < 1:
                         GPIO.output(pin, not on)
                         time.sleep(10) # Give valve time to close

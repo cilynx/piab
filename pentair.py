@@ -122,25 +122,35 @@ def setPumpPower(state):
     sendPump(COMMANDS['PUMP_POWER'], [PUMP_POWER[state]])
 
 def setPumpRPM(rpm):
-    print("Setting pump RPM to", rpm)
+#    print(f"{CYAN}setPumpRPM({rpm}){ENDC}")
     data = PUMP_MODES['SET_RPM'][:]
     data.extend([int(rpm / 256), int(rpm % 256)])
     response = sendPump(COMMANDS['PUMP_MODE'], data)
     status = None
     actual_rpm = None
+    count = 0
     while actual_rpm != rpm:
-        while not status:
-            status = getPumpStatus()
+        status = getPumpStatus()
+        # print(f"{ORANGE}Mode: {status[0]}{ENDC}")
+        # print(f"{ORANGE}Watts: {status[1]}{ENDC}")
+        # print(f"{ORANGE}RPM: {status[2]}, Target: {rpm}{ENDC}")
+        # print(f"{ORANGE}Remaining Time: {status[3]}:{status[4]}{ENDC}")
+        # print(f"{ORANGE}Clock Time: {status[5]}:{status[6]}{ENDC}")
         actual_rpm = status[2]
         status = None
-        print("RPM:",actual_rpm)
+        count += 1
+        if count == 30:
+            print(f"{RED}Didn't reach target after 30s.  Resending request.")
+            setPumpRPM(rpm)
+            return
+        time.sleep(1)
     return rpm
 
 def setPumpProgram(program):
     sendPump(COMMANDS['PUMP_MODE'], PUMP_PROGRAMS[program])
 
 def sendPump(command, data=None):
-    print(f"{CYAN}sendPump({command}, {data}){ENDC}")
+#    print(f"{CYAN}sendPump({command}, {data}){ENDC}")
 
     if(COMMAND_BLOCKS_CONSOLE[command]):
         setPumpRemoteControl(True)
@@ -162,7 +172,7 @@ def setPumpRemoteControl(state):
     return getResponsePacket()
 
 def getPumpStatus():
-    print(f"{CYAN}getPumpStatus(){ENDC}")
+#    print(f"{CYAN}getPumpStatus(){ENDC}")
     response = sendPump(COMMANDS['PUMP_STATUS'])
     if response[PACKET_FIELDS['COMMAND']] == COMMANDS['PUMP_STATUS']:
         data = response[9:]
@@ -174,7 +184,7 @@ def getPumpStatus():
         return mode, watts, rpm, hour_r, minute_r, hour_c, minute_c
 
 def getResponsePacket():
-    print(f"{CYAN}getResponsePacket(){ENDC}")
+#    print(f"{CYAN}getResponsePacket(){ENDC}")
     packet = []
     while True:
         c = int.from_bytes(RS485.read(), 'big')
@@ -191,13 +201,13 @@ def getResponsePacket():
                 packet.append(data_length)
                 packet.extend(data)
 
-            print(f"{GREEN}{packet}{ENDC}")
-            print(f"{ORANGE}Version: {packet[4]}{ENDC}")
-            print(f"{ORANGE}DST: {packet[5]}{ENDC}")
-            print(f"{ORANGE}SRC: {packet[6]}{ENDC}")
-            print(f"{ORANGE}Command: {COMMANDS[packet[7]]}{ENDC}")
-            print(f"{ORANGE}Data Length: {packet[8]}{ENDC}")
-            print(f"{ORANGE}Data: {packet[9:]}{ENDC}")
+            # print(f"{GREEN}{packet}{ENDC}")
+            # print(f"{ORANGE}Version: {packet[4]}{ENDC}")
+            # print(f"{ORANGE}DST: {packet[5]}{ENDC}")
+            # print(f"{ORANGE}SRC: {packet[6]}{ENDC}")
+            # print(f"{ORANGE}Command: {COMMANDS[packet[7]]}{ENDC}")
+            # print(f"{ORANGE}Data Length: {packet[8]}{ENDC}")
+            # print(f"{ORANGE}Data: {packet[9:]}{ENDC}")
             payload = packet[3:]
 
             calc_check_h = int(sum(payload) / 256)
@@ -233,16 +243,16 @@ def buildPacket(dst, command, data=None):
 
     # import binascii
     pack = list(packet)
-    print(f"{YELLOW}{list(pack)}")
-    print(f"{ORANGE}Version: {pack[4]}{ENDC}")
-    print(f"{ORANGE}DST: {pack[5]}{ENDC}")
-    print(f"{ORANGE}SRC: {pack[6]}{ENDC}")
-    print(f"{ORANGE}Command: {COMMANDS[pack[7]]}{ENDC}")
-    print(f"{ORANGE}Data Length: {pack[8]}{ENDC}")
-    print(f"{ORANGE}Data: {pack[9:-2]}{ENDC}")
-    if pack[7] == COMMANDS['PUMP_MODE']:
-        print(f"{ORANGE}Pump Mode: {PUMP_MODES[pack[9]]}{ENDC}")
-        if [pack[9],pack[10]] == PUMP_MODES['SET_RPM']:
-            print(f"{ORANGE}RPM: {pack[11]*256+pack[12]}{ENDC}")
+    # print(f"{YELLOW}{list(pack)}")
+    # print(f"{ORANGE}Version: {pack[4]}{ENDC}")
+    # print(f"{ORANGE}DST: {pack[5]}{ENDC}")
+    # print(f"{ORANGE}SRC: {pack[6]}{ENDC}")
+    # print(f"{ORANGE}Command: {COMMANDS[pack[7]]}{ENDC}")
+    # print(f"{ORANGE}Data Length: {pack[8]}{ENDC}")
+    # print(f"{ORANGE}Data: {pack[9:-2]}{ENDC}")
+    # if pack[7] == COMMANDS['PUMP_MODE']:
+    #     print(f"{ORANGE}Pump Mode: {PUMP_MODES[pack[9]]}{ENDC}")
+    #     if [pack[9],pack[10]] == PUMP_MODES['SET_RPM']:
+    #         print(f"{ORANGE}RPM: {pack[11]*256+pack[12]}{ENDC}")
 
     return packet
