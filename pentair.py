@@ -122,7 +122,7 @@ def setPumpPower(state):
     sendPump(COMMANDS['PUMP_POWER'], [PUMP_POWER[state]])
 
 def setPumpRPM(rpm):
-#    print(f"{CYAN}setPumpRPM({rpm}){ENDC}")
+    print(f"{YELLOW}setPumpRPM({rpm}){ENDC}")
     data = PUMP_MODES['SET_RPM'][:]
     data.extend([int(rpm / 256), int(rpm % 256)])
     response = sendPump(COMMANDS['PUMP_MODE'], data)
@@ -139,8 +139,8 @@ def setPumpRPM(rpm):
         actual_rpm = status[2]
         status = None
         count += 1
-        if count == 30:
-            print(f"{RED}Didn't reach target after 30s.  Resending request.")
+        if count == 50:
+            print(f"{RED}Didn't reach target after 50s.  Resending request.{ENDC}")
             setPumpRPM(rpm)
             return
         time.sleep(1)
