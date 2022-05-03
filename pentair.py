@@ -131,11 +131,11 @@ def setPumpRPM(rpm):
     count = 0
     while actual_rpm != rpm:
         status = getPumpStatus()
-        # print(f"{ORANGE}Mode: {status[0]}{ENDC}")
-        # print(f"{ORANGE}Watts: {status[1]}{ENDC}")
-        # print(f"{ORANGE}RPM: {status[2]}, Target: {rpm}{ENDC}")
-        # print(f"{ORANGE}Remaining Time: {status[3]}:{status[4]}{ENDC}")
-        # print(f"{ORANGE}Clock Time: {status[5]}:{status[6]}{ENDC}")
+        print(f"{ORANGE}Mode: {status[0]}{ENDC}")
+        print(f"{ORANGE}Watts: {status[1]}{ENDC}")
+        print(f"{ORANGE}RPM: {status[2]}, Target: {rpm}{ENDC}")
+        print(f"{ORANGE}Remaining Time: {status[3]}:{status[4]}{ENDC}")
+        print(f"{ORANGE}Clock Time: {status[5]}:{status[6]}{ENDC}")
         actual_rpm = status[2]
         status = None
         count += 1
