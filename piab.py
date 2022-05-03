@@ -94,7 +94,7 @@ class backgroundWorker (threading.Thread):
                     csv=open('./temp.csv', 'a')
                     csv.write(datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S') + ", " + str(config['sensors']['RoofTemperature']['deg_F']) + ", " + str(config['sensors']['PoolTemperature']['deg_F']) + ", " + str(config['sensors']['HeatedTemperature']['deg_F']) + "\n")
                     csv.close()
-                    if config['sensors']['RoofTemperature']['deg_F'] - config['sensors']['PoolTemperature']['deg_F'] > 15:
+                    if config['sensors']['RoofTemperature']['deg_F'] - config['sensors']['PoolTemperature']['deg_F'] > 15 or config['sensors']['HeatedTemperature']['deg_F'] - config['sensors']['PoolTemperature']['deg_F'] > 15:
                         if 'state' in config['heaters']['Solar'] and config['heaters']['Solar']['state'] == True:
                             print(f"{RED}Solar Heater is on.  Good.{ENDC}")
                             pentair.setPumpRPM(3000)
@@ -103,15 +103,15 @@ class backgroundWorker (threading.Thread):
                             config['heaters']['Solar']['state'] = True
                             pentair.setPumpRPM(3000)
                             GPIO.output(pin, on)
-                            for i in range(10):
-                                time.sleep(30)
+                            for i in range(30):
+                                time.sleep(10)
                                 pentair.setPumpRPM(3000)
                     elif config['sensors']['HeatedTemperature']['deg_F'] - config['sensors']['PoolTemperature']['deg_F'] < 1:
                         if 'state' in config['heaters']['Solar'] and config['heaters']['Solar']['state'] == True:
                             print(f"{CYAN}Turning Solar Heater off.{ENDC}")
                             config['heaters']['Solar']['state'] = False
                             GPIO.output(pin, not on)
-                            time.sleep(10) # Give valve time to close
+                            time.sleep(10)  # Give valve time to close before slowing the pump
                         else:
                             print(f"{CYAN}Solar Heater is off.  Good.{ENDC}")
                         pentair.setPumpRPM(1500)
