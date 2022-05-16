@@ -13,8 +13,8 @@ with open('json/config.json', 'r') as file:
     config = json.load(file)
 
 # Keeping this around in case I need it later.
-#with open('json/config.json', 'w') as file:
-#    json.dump(config, file, sort_keys=True, indent=3)
+with open('json/config.json', 'w') as file:
+    json.dump(config, file, sort_keys=True, indent=3)
 
 import RPi.GPIO as GPIO
 

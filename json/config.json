@@ -1,109 +1,109 @@
 {
    "accessories": {
       "PoolLights": {
-         "module": "Main", 
+         "module": "Main",
          "relay": 1
       }
-   }, 
+   },
    "converters": {
       "DemoBoard": {
-         "address": "0x48", 
+         "address": "0x48",
          "model": "PCF8591 Demo Board"
       }
-   }, 
+   },
    "heaters": {
       "Solar": {
-         "module": "Main", 
-         "pump": "Filter", 
+         "module": "Main",
+         "pump": "Filter",
          "relay": 4
       }
-   }, 
+   },
    "pumps": {
       "Filter": {
-         "module": "Main", 
-	 "protocol": "rs485",
-	 "relay": "None",
+         "module": "Main",
+         "protocol": "rs485",
+         "relay": "None",
          "speeds": {
             "Speed 1": {
                "rpm": 2000
-            }, 
+            },
             "Speed 2": {
                "rpm": 2500
-            }, 
+            },
             "Speed 3": {
                "rpm": 3000
-            }, 
+            },
             "Speed 4": {
                "rpm": 4000
             }
          }
-      }, 
+      },
       "Waterfall": {
-         "module": "Main", 
+         "module": "Main",
          "relay": 2
       }
-   }, 
+   },
    "relay_modules": {
       "Main": {
-         "active_low": true, 
+         "active_low": true,
          "relays": {
             "1": {
                "gpio": 1
-            }, 
+            },
             "2": {
                "gpio": 4
-            }, 
+            },
             "3": {
                "gpio": 0
-            }, 
+            },
             "4": {
                "gpio": 2
             }
          }
       }
-   }, 
+   },
    "sensors": {
-      "PoolTemperature": {
-         "adc": "ain3", 
-         "converter": "DemoBoard", 
+      "HeatedTemperature": {
+         "adc": "ain1",
+         "converter": "DemoBoard",
          "points": [
             [
-	       85, 
-	       32.0 
-            ], 
+               85,
+               32
+            ],
             [
-               226, 
-               96.0
-            ]
-         ]
-      }, 
-      "RoofTemperature": {
-         "adc": "ain2", 
-         "converter": "DemoBoard", 
-         "points": [
-            [
-               85, 
-	       32.0 
-            ], 
-            [
-               226, 
-               96.0  
+               226,
+               96
             ]
          ]
       },
-      "HeatedTemperature": {
-	 "adc": "ain1",
-	 "converter": "DemoBoard",
-	 "points" : [
-	    [
-	       85,
-	       32.0
-	    ],
-	    [
-	       226,
-	       96.0
-	    ]
-	 ]
+      "PoolTemperature": {
+         "adc": "ain3",
+         "converter": "DemoBoard",
+         "points": [
+            [
+               85,
+               32
+            ],
+            [
+               226,
+               96
+            ]
+         ]
+      },
+      "RoofTemperature": {
+         "adc": "ain2",
+         "converter": "DemoBoard",
+         "points": [
+            [
+               85,
+               32
+            ],
+            [
+               226,
+               96
+            ]
+         ]
       }
    }
 }
