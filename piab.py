@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
+from bottle import route, request, run, template
 
-import pentair
-#import sms
+import threading
 import datetime
-
+import pentair
+import smbus
+import time
 import json
+# import sms
 
 with open('json/parts.json', 'r') as file:
     parts = json.load(file)
@@ -12,37 +15,33 @@ with open('json/parts.json', 'r') as file:
 with open('json/config.json', 'r') as file:
     config = json.load(file)
 
-# Keeping this around in case I need it later.
-with open('json/config.json', 'w') as file:
-    json.dump(config, file, sort_keys=True, indent=3)
+# with open('json/config.json', 'w') as file:
+#     json.dump(config, file, sort_keys=True, indent=3)
 
 import RPi.GPIO as GPIO
 
 GPIO.setmode(GPIO.BOARD)
-GPIO_PIN = [11,12,13,15,16,18,25]
-
-import smbus
+GPIO_PIN = [11, 12, 13, 15, 16, 18, 25]
 
 bus = smbus.SMBus(1)
 
-import threading
-import time
-
-RED    = '\033[31m'
+RED = '\033[31m'
 ORANGE = '\033[91m'
 YELLOW = '\033[93m'
-GREEN  = '\033[92m'
-CYAN   = '\033[36m'
-ENDC   = '\033[0m'
+GREEN = '\033[92m'
+CYAN = '\033[36m'
+ENDC = '\033[0m'
+
 
 class backgroundWorker (threading.Thread):
-    # TODO: This whole worker class is a goat rodeo.  It needs to be configurable, DRYed, etc.
+    # TODO: This whole worker class needs to be configurable, DRYed, etc.
     def __init__(self):
-         threading.Thread.__init__(self)
+        threading.Thread.__init__(self)
+
     def run(self):
         sentMessage = False
         while True:
-            for sensor_name,sensor in config['sensors'].items():
+            for sensor_name, sensor in config['sensors'].items():
                 time.sleep(1)
 
                 converter = config['converters'][sensor['converter']]
@@ -50,13 +49,13 @@ class backgroundWorker (threading.Thread):
                 board = parts['converters'][converter['model']]
                 cmd = board['adcs'][sensor['adc']]
 
-                # Throw away the first reading as it's old...on the PCF8591 anyway
-                bus.read_byte_data(int(addr,16), int(cmd,16))
+                # First reading on the PCF8591 is always stale
+                bus.read_byte_data(int(addr, 16), int(cmd, 16))
 
                 total = 0
-                count = 10 # TODO: This might be better as a config setting
+                count = 10  # TODO: This might be better as a config setting
                 for _ in range(count):
-                    total += bus.read_byte_data(int(addr,16), int(cmd,16))
+                    total += bus.read_byte_data(int(addr, 16), int(cmd, 16))
 
                 sensor['value'] = total / count
 
@@ -125,19 +124,21 @@ class backgroundWorker (threading.Thread):
                         else:
                             pentair.setPumpRPM(1400)
 
+
 workerThread = backgroundWorker()
 workerThread.setDaemon(True)
 workerThread.start()
 
-from bottle import route, request, run, static_file, template
 
 @route('/')
 def index():
     return template('html/index.html')
 
+
 @route('/config')
 def configure():
     return template('html/config.html', config=config, parts=parts)
+
 
 @route('/led')
 def led():
@@ -148,6 +149,7 @@ def led():
 
     return template('html/led.html', checked=checked)
 
+
 @route('/popup/<type>/<name>')
 def popup(type, name):
     sensor = config[type][name]
@@ -157,12 +159,12 @@ def popup(type, name):
     cmd = board['adcs'][sensor['adc']]
 
     # Throw away the first reading as it's old...on the PCF8591 anyway
-    bus.read_byte_data(int(addr,16), int(cmd,16))
+    bus.read_byte_data(int(addr, 16), int(cmd, 16))
 
     total = 0
-    count = 100 # TODO: This might be better as a config setting
+    count = 100  # TODO: This might be better as a config setting
     for _ in range(count):
-        total += bus.read_byte_data(int(addr,16), int(cmd,16))
+        total += bus.read_byte_data(int(addr, 16), int(cmd, 16))
 
     sensor['value'] = total / count
 
@@ -176,8 +178,8 @@ def popup(type, name):
 
     sensor['deg_F'] = m*sensor['value'] + b
 
-
     return str(int(sensor['deg_F'])) + " F (" + str(sensor['value']) + ")"
+
 
 @route('/action', method='POST')
 def action():
@@ -187,14 +189,16 @@ def action():
     item = config[item_type][item_name]
     item['state'] = bool(int(request.forms.get('state')))
 
-    if 'protocol' in item and 'port' in item: # Item is an abstraction (Pump, Heater, Accessory) connected to a Serial Port
+    # Item is an abstraction (Pump, Heater, Accessory) connected to a port
+    if 'protocol' in item and 'port' in item:
         None
     else:
-        if 'module' in item and 'relay' in item: # Item is an abstraction (Pump, Heater, Accessory) connected to a Relay Module
+        # Item is an abstraction (Pump, Heater, Accessory) connected to a relay
+        if 'module' in item and 'relay' in item:
             module = config['relay_modules'][item['module']]
             relay = module['relays'][str(item['relay'])]
 
-        else: # Item is a Relay Module
+        else:  # Item is a Relay Module
             module = item
             relay = module['relays'][request.forms.get('relay')]
 
@@ -212,5 +216,6 @@ def action():
             GPIO.output(pin, on)
         else:
             GPIO.output(pin, not on)
+
 
 run(host='0.0.0.0', port=8000, debug=True, reloader=False)
