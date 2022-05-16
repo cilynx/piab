@@ -116,14 +116,14 @@ class backgroundWorker (threading.Thread):
                             time.sleep(10)  # Give valve time to close before slowing the pump
                         else:
                             print(f"{CYAN}Solar Heater is off.  Good.{ENDC}")
-                        pentair.setPumpRPM(1500)
+                        pentair.setPumpRPM(1400)
 
                     else:
                         print(f"{GREEN}Avoiding Bounce.{ENDC}")
                         if 'state' in config['heaters']['Solar'] and config['heaters']['Solar']['state'] == True:
                             pentair.setPumpRPM(3000)
                         else:
-                            pentair.setPumpRPM(1500)
+                            pentair.setPumpRPM(1400)
 
 workerThread = backgroundWorker()
 workerThread.setDaemon(True)
