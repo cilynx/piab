@@ -94,7 +94,7 @@ class backgroundWorker (threading.Thread):
                     csv=open('./temp.csv', 'a')
                     csv.write(datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S') + ", " + str(config['sensors']['RoofTemperature']['deg_F']) + ", " + str(config['sensors']['PoolTemperature']['deg_F']) + ", " + str(config['sensors']['HeatedTemperature']['deg_F']) + "\n")
                     csv.close()
-                    if config['sensors']['RoofTemperature']['deg_F'] - config['sensors']['PoolTemperature']['deg_F'] > 15 or config['sensors']['HeatedTemperature']['deg_F'] - config['sensors']['PoolTemperature']['deg_F'] > 15:
+                    if config['sensors']['RoofTemperature']['deg_F'] - config['sensors']['PoolTemperature']['deg_F'] > 15:
                         if 'state' in config['heaters']['Solar'] and config['heaters']['Solar']['state'] == True:
                             print(f"{RED}Solar Heater is on.  Good.{ENDC}")
                             pentair.setPumpRPM(3000)
