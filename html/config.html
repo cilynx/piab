@@ -3,7 +3,7 @@
    <div data-role="collapsible">
       <h3>Relay Modules</h3>
       % if 'relay_modules' in config:
-      % for module_name,module in config['relay_modules'].iteritems():
+      % for module_name,module in config['relay_modules'].items():
       <a href="#popupModule{{module_name}}" data-rel="popup" data-position-to="window" class="ui-btn ui-btn-inline">{{module_name}}</a>
       <div data-role="popup" id="popupModule{{module_name}}">
 	 <form>
@@ -15,7 +15,7 @@
 			<h3>Control</h3>
 		     </div>
 		     <div class="ui-body ui-body-a">
-			% for relay_name,relay in sorted(module['relays'].iteritems()):
+			% for relay_name,relay in sorted(module['relays'].items()):
 			<script>
 $(document).ready(function() {
    $("#module_{{module_name}}_relay_{{relay_name}}").change(function() {
@@ -32,7 +32,7 @@ $(document).ready(function() {
 			   Relay {{relay_name}} [GPIO_{{relay['gpio']}}]
 
 			   % if 'pumps' in config:
-			   % for pump_name,pump in config['pumps'].iteritems():
+			   % for pump_name,pump in config['pumps'].items():
 			   % if pump['module'] == module_name and pump['relay'] == int(relay_name):
 			   ({{pump_name}} Pump)
 			   % end
@@ -40,7 +40,7 @@ $(document).ready(function() {
 			   % end
 
 			   % if 'heaters' in config:
-			   % for heater_name,heater in config['heaters'].iteritems():
+			   % for heater_name,heater in config['heaters'].items():
 			   % if heater['module'] == module_name and heater['relay'] == int(relay_name):
 			   ({{heater_name}} Heater)
 			   % end
@@ -48,7 +48,7 @@ $(document).ready(function() {
 			   % end
 
 			   % if 'accessories' in config:
-			   % for accessory_name,accessory in config['accessories'].iteritems():
+			   % for accessory_name,accessory in config['accessories'].items():
 			   % if accessory['module'] == module_name and accessory['relay'] == int(relay_name):
 			   ({{accessory_name}})
 			   % end
@@ -73,7 +73,7 @@ $(document).ready(function() {
    <div data-role="collapsible">
       <h3>A/D Converters</h3>
       % if 'converters' in config:
-      % for converter_name,converter in config['converters'].iteritems():
+      % for converter_name,converter in config['converters'].items():
       <a href="#popupConverter{{converter_name}}" data-rel="popup" data-position-to="window" class="ui-btn ui-btn-inline">{{converter_name}}</a>
       <div data-role="popup" id="popupConverter{{converter_name}}">
 	 <form>
@@ -101,7 +101,7 @@ $(document).ready(function() {
 		     </div>
 		     <div class="ui-body ui-body-a">
 			<table> 
-			   % for adc_name,adc in sorted(parts['converters'][converter['model']]['adcs'].iteritems()):
+			   % for adc_name,adc in sorted(parts['converters'][converter['model']]['adcs'].items()):
 			   <tr>
 			      <td style="border-bottom: 1px solid silver; padding-right: 1em">{{adc_name}}</td>
 			      <td style="border-bottom: 1px solid silver">{{adc}}</td>
@@ -116,7 +116,7 @@ $(document).ready(function() {
 		     </div>
 		     <div class="ui-body ui-body-a">
 			<table> 
-			   % for dac_name,dac in sorted(parts['converters'][converter['model']]['dacs'].iteritems()):
+			   % for dac_name,dac in sorted(parts['converters'][converter['model']]['dacs'].items()):
 			   <tr>
 			      <td style="border-bottom: 1px solid silver; padding-right: 1em">{{dac_name}}</td>
 			      <td style="border-bottom: 1px solid silver">{{dac}}</td>
@@ -135,7 +135,7 @@ $(document).ready(function() {
    <div data-role="collapsible">
       <h3>Pumps</h3>
       % if 'pumps' in config:
-      % for pump_name,pump in config['pumps'].iteritems():
+      % for pump_name,pump in config['pumps'].items():
       <a href="#popupPump{{pump_name}}" data-rel="popup" data-position-to="window" class="ui-btn ui-btn-inline">{{pump_name}}</a>
       <div data-role="popup" id="popupPump{{pump_name}}">
 	 <form>
@@ -208,7 +208,7 @@ $(document).ready(function() {
 			<h3>Speeds</h3>
 		     </div>
 		     <div class="ui-body ui-body-a">
-			% for speed_name,speed in sorted(pump['speeds'].iteritems()):
+			% for speed_name,speed in sorted(pump['speeds'].items()):
 			<label for="pump{{pump_name}}speed{{speed_name}}"> {{speed_name}}</label>
 			% if 'rpm' in speed:
 			<input name="pump{{pump_name}}speed{{speed_name}}" id="pump{{pump_name}}speed{{speed_name}}" pattern="[0-9]*" type="number" value="{{speed['rpm']}}"> 
@@ -230,7 +230,7 @@ $(document).ready(function() {
    <div data-role="collapsible">
       <h3>Heaters</h3>
       % if 'heaters' in config:
-      % for heater_name,heater in config['heaters'].iteritems():
+      % for heater_name,heater in config['heaters'].items():
       <a href="#popupHeater{{heater_name}}" data-rel="popup" data-position-to="window" class="ui-btn ui-btn-inline">{{heater_name}}</a>
       <div data-role="popup" id="popupHeater{{heater_name}}">
 	 <form>
@@ -296,7 +296,7 @@ $(document).ready(function() {
    <div data-role="collapsible">
       <h3>Sensors</h3>
       % if 'sensors' in config:
-      % for sensor_name,sensor in config['sensors'].iteritems():
+      % for sensor_name,sensor in config['sensors'].items():
       <a href="#popupSensor{{sensor_name}}" data-rel="popup" data-position-to="window" class="ui-btn ui-btn-inline">{{sensor_name}}</a>
       <div data-role="popup" id="popupSensor{{sensor_name}}"> 
 	 <div style="padding:10px 20px;">
@@ -347,7 +347,7 @@ $(document).ready(function() {
    <div data-role="collapsible">
       <h3>Accessories</h3>
       % if 'accessories' in config:
-      % for accessory_name,accessory in config['accessories'].iteritems():
+      % for accessory_name,accessory in config['accessories'].items():
       <a href="#popupAccessory{{accessory_name}}" data-rel="popup" data-position-to="window" class="ui-btn ui-btn-inline">{{accessory_name}}</a>
       <div data-role="popup" id="popupAccessory{{accessory_name}}">
 	 <form>
