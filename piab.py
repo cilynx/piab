@@ -102,8 +102,10 @@ class backgroundWorker (threading.Thread):
                             print(f"{RED}Turning Solar Heater on and holding 5m for system to settle.{ENDC}")
                             config['heaters']['Solar']['state'] = True
                             pentair.setPumpRPM(3000)
+                            print(f'{RED}Reached RPM.  Opening valve.{ENDC}')
                             GPIO.output(pin, on)
                             for i in range(30):
+                                print(f'{RED}{i*10} of 300s{ENDC}')
                                 time.sleep(10)
                                 pentair.setPumpRPM(3000)
                     elif config['sensors']['HeatedTemperature']['deg_F'] - config['sensors']['PoolTemperature']['deg_F'] < 1:
