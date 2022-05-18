@@ -12,11 +12,14 @@ import json
 with open('json/parts.json', 'r') as file:
     parts = json.load(file)
 
+with open('json/parts.json', 'w') as file:
+    json.dump(parts, file, sort_keys=True, indent=3)
+
 with open('json/config.json', 'r') as file:
     config = json.load(file)
 
-# with open('json/config.json', 'w') as file:
-#     json.dump(config, file, sort_keys=True, indent=3)
+with open('json/config.json', 'w') as file:
+    json.dump(config, file, sort_keys=True, indent=3)
 
 import RPi.GPIO as GPIO
 
@@ -90,7 +93,7 @@ class backgroundWorker (threading.Thread):
                         sentMessage = False
 
                 if 'value' in config['sensors']['RoofTemperature'] and 'value' in config['sensors']['PoolTemperature'] and 'value' in config['sensors']['HeatedTemperature']:
-                    csv=open('./temp.csv', 'a')
+                    csv = open('./temp.csv', 'a')
                     csv.write(datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S') + ", " + str(config['sensors']['RoofTemperature']['deg_F']) + ", " + str(config['sensors']['PoolTemperature']['deg_F']) + ", " + str(config['sensors']['HeatedTemperature']['deg_F']) + "\n")
                     csv.close()
                     if config['sensors']['RoofTemperature']['deg_F'] - config['sensors']['PoolTemperature']['deg_F'] > 15:
