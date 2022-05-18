@@ -43,6 +43,8 @@ class backgroundWorker (threading.Thread):
 
     def run(self):
         sentMessage = False
+        lastChange = datetime.datetime.now()
+        lastAction = ""
         while True:
             for sensor_name, sensor in config['sensors'].items():
                 time.sleep(1)
@@ -97,6 +99,9 @@ class backgroundWorker (threading.Thread):
                     csv.write(datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S') + ", " + str(config['sensors']['RoofTemperature']['deg_F']) + ", " + str(config['sensors']['PoolTemperature']['deg_F']) + ", " + str(config['sensors']['HeatedTemperature']['deg_F']) + "\n")
                     csv.close()
                     if config['sensors']['RoofTemperature']['deg_F'] - config['sensors']['PoolTemperature']['deg_F'] > 15:
+                        if lastAction != "turn_on":
+                            lastAction = "turn_on"
+                            lastChange = datetime.datetime.now()
                         if 'state' in config['heaters']['Solar'] and config['heaters']['Solar']['state'] == True:
                             print(f"{RED}Solar Heater is on.  Good.{ENDC}")
                             pentair.setPumpRPM(3000)
@@ -111,17 +116,24 @@ class backgroundWorker (threading.Thread):
                                 time.sleep(10)
                                 pentair.setPumpRPM(3000)
                     elif config['sensors']['HeatedTemperature']['deg_F'] - config['sensors']['PoolTemperature']['deg_F'] < 1:
+                        if lastAction != "turn_off":
+                            lastAction = "turn_off"
+                            lastChange = datetime.datetime.now()
                         if 'state' in config['heaters']['Solar'] and config['heaters']['Solar']['state'] == True:
-                            print(f"{CYAN}Turning Solar Heater off.{ENDC}")
-                            config['heaters']['Solar']['state'] = False
-                            GPIO.output(pin, not on)
-                            time.sleep(10)  # Give valve time to close before slowing the pump
+                            if (datetime.datetime.now() - lastChange).total_seconds() > 300:
+                                print(f"{CYAN}Turning Solar Heater off.{ENDC}")
+                                config['heaters']['Solar']['state'] = False
+                                GPIO.output(pin, not on)
+                                time.sleep(10)  # Give valve time to close before slowing the pump
                         else:
                             print(f"{CYAN}Solar Heater is off.  Good.{ENDC}")
                         pentair.setPumpRPM(1400)
 
                     else:
                         print(f"{GREEN}Avoiding Bounce.{ENDC}")
+                        if lastAction != "avoiding_bounce":
+                            lastAction = "avoiding_bounce"
+                            lastChange = datetime.datetime.now()
                         if 'state' in config['heaters']['Solar'] and config['heaters']['Solar']['state'] == True:
                             pentair.setPumpRPM(3000)
                         else:
