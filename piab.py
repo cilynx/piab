@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 from bottle import route, request, run, template
 
+import RPi.GPIO as GPIO
+
 import threading
 import datetime
 import pentair
@@ -9,19 +11,19 @@ import time
 import json
 # import sms
 
-with open('json/parts.json', 'r') as file:
+PREFIX = '/home/pi/piab'
+
+with open(f'{PREFIX}/json/parts.json', 'r') as file:
     parts = json.load(file)
 
-with open('json/parts.json', 'w') as file:
+with open(f'{PREFIX}/json/parts.json', 'w') as file:
     json.dump(parts, file, sort_keys=True, indent=3)
 
-with open('json/config.json', 'r') as file:
+with open(f'{PREFIX}/json/config.json', 'r') as file:
     config = json.load(file)
 
-with open('json/config.json', 'w') as file:
+with open(f'{PREFIX}/json/config.json', 'w') as file:
     json.dump(config, file, sort_keys=True, indent=3)
-
-import RPi.GPIO as GPIO
 
 GPIO.setmode(GPIO.BOARD)
 GPIO_PIN = [11, 12, 13, 15, 16, 18, 25]
@@ -40,6 +42,7 @@ colors = {
     'RoofTemperature': RED,
     'PoolTemperature': CYAN
 }
+
 
 class backgroundWorker (threading.Thread):
     # TODO: This whole worker class needs to be configurable, DRYed, etc.
@@ -100,9 +103,8 @@ class backgroundWorker (threading.Thread):
                     sentMessage = False
 
             if 'value' in config['sensors']['RoofTemperature'] and 'value' in config['sensors']['PoolTemperature'] and 'value' in config['sensors']['HeatedTemperature']:
-                csv = open('./temp.csv', 'a')
-                csv.write(datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S') + ", " + str(config['sensors']['RoofTemperature']['deg_F']) + ", " + str(config['sensors']['PoolTemperature']['deg_F']) + ", " + str(config['sensors']['HeatedTemperature']['deg_F']) + "\n")
-                csv.close()
+                with open(f'{PREFIX}/temp.csv', 'a') as csv:
+                    csv.write(datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S') + ", " + str(config['sensors']['RoofTemperature']['deg_F']) + ", " + str(config['sensors']['PoolTemperature']['deg_F']) + ", " + str(config['sensors']['HeatedTemperature']['deg_F']) + "\n")
                 if config['sensors']['RoofTemperature']['deg_F'] - config['sensors']['PoolTemperature']['deg_F'] > 15:
                     if lastAction != "turn_on":
                         lastAction = "turn_on"
