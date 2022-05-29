@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 from bottle import route, request, run, template
 
+from pypentair import Pump
+
 import RPi.GPIO as GPIO
 
 import threading
 import datetime
-import pentair
+# import pentair
 import smbus
 import time
 import json
@@ -30,6 +32,8 @@ GPIO_PIN = [11, 12, 13, 15, 16, 18, 25]
 
 bus = smbus.SMBus(1)
 
+pump = Pump(1)
+
 RED = '\033[31m'
 ORANGE = '\033[91m'
 YELLOW = '\033[93m'
@@ -43,7 +47,6 @@ colors = {
     'PoolTemperature': CYAN
 }
 
-
 class backgroundWorker (threading.Thread):
     # TODO: This whole worker class needs to be configurable, DRYed, etc.
     def __init__(self):
@@ -53,6 +56,8 @@ class backgroundWorker (threading.Thread):
         sentMessage = False
         lastChange = datetime.datetime.now()
         lastAction = ""
+        config['heaters']['Solar']['state'] = False  # Start with heater off
+
         while True:
             print(lastAction, (datetime.datetime.now() - lastChange).total_seconds())
             for sensor_name, sensor in config['sensors'].items():
@@ -82,7 +87,7 @@ class backgroundWorker (threading.Thread):
                 sensor['deg_F'] = m*sensor['value'] + b
 
                 print(f"{colors[sensor_name]}{sensor_name} {str(int(sensor['deg_F']))}F ({str(int(sensor['value']))}) {ENDC}", end='')
-            print()
+            print(f"{YELLOW}RPM: {pump.rpm}{ENDC}")
             item = config['heaters']['Solar']
             module = config['relay_modules'][item['module']]
             relay = module['relays'][str(item['relay'])]
@@ -111,17 +116,20 @@ class backgroundWorker (threading.Thread):
                         lastChange = datetime.datetime.now()
                     if 'state' in config['heaters']['Solar'] and config['heaters']['Solar']['state'] == True:
                         print(f"{RED}Solar Heater is on.  Good.{ENDC}")
-                        pentair.setPumpRPM(3000)
+                        # pentair.setPumpRPM(3000)
+                        pump.rpm = 3000
                     else:
                         print(f"{RED}Turning Solar Heater on and holding 5m for system to settle.{ENDC}")
                         config['heaters']['Solar']['state'] = True
-                        pentair.setPumpRPM(3000)
+                        # pentair.setPumpRPM(3000)
+                        pump.rpm = 3000
                         print(f'{RED}Reached RPM.  Opening valve.{ENDC}')
                         GPIO.output(pin, on)
                         for i in range(30):
                             print(f'{RED}{i*10} of 300s{ENDC}')
                             time.sleep(10)
-                            pentair.setPumpRPM(3000)
+                            # pentair.setPumpRPM(3000)
+                            pump.rpm = 3000
                 elif config['sensors']['HeatedTemperature']['deg_F'] - config['sensors']['PoolTemperature']['deg_F'] < 1:
                     if lastAction != "turn_off":
                         lastAction = "turn_off"
@@ -134,17 +142,23 @@ class backgroundWorker (threading.Thread):
                             time.sleep(10)  # Give valve time to close before slowing the pump
                     else:
                         print(f"{CYAN}Solar Heater is off.  Good.{ENDC}")
-                    pentair.setPumpRPM(1400)
+                    # pentair.setPumpRPM(1400)
+                    pump.rpm = 1400
 
                 else:
                     print(f"{GREEN}Avoiding Bounce.{ENDC}")
                     if lastAction != "avoiding_bounce":
                         lastAction = "avoiding_bounce"
                         lastChange = datetime.datetime.now()
-                    if 'state' in config['heaters']['Solar'] and config['heaters']['Solar']['state'] == True:
-                        pentair.setPumpRPM(3000)
+                    if 'state' in config['heaters']['Solar']:
+                        if config['heaters']['Solar']['state'] == True:
+                            # pentair.setPumpRPM(3000)
+                            pump.rpm = 3000
+                        else:
+                            # pentair.setPumpRPM(1400)
+                            pump.rpm = 1400
                     else:
-                        pentair.setPumpRPM(1400)
+                        print('State is undefined -- not doing anything')
             time.sleep(15)
 
 
