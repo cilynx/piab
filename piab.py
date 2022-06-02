@@ -11,6 +11,7 @@ import smbus
 import time
 import json
 # import sms
+import sys
 
 PREFIX = '/home/pi/piab'
 
@@ -66,7 +67,8 @@ class backgroundWorker (threading.Thread):
         heater.turn_off()
 
         # Turn heater on
-        # heater.turn_on()
+        if len(sys.argv) > 1 and sys.argv[1] == 'heat':
+            heater.turn_on()
 
         while True:
             print(lastAction, (datetime.datetime.now() - lastChange).total_seconds())
